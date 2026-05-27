@@ -1,8 +1,8 @@
 {
-  "build": {
-    "env": {
-      "SERVER_PRESET": "vercel",
-      "NITRO_PRESET": "vercel"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  }
+  ]
 }

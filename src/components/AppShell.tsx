@@ -111,6 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navByRole: Record<typeof role, NavItem[]> = {
     hr: [
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
+      { to: "/queue", label: "Impact Queue", icon: ClipboardList },
       { to: "/myt/war-room", label: "War Room", icon: Swords, accent: true },
       { to: "/myt/team", label: "Team", icon: Users },
       { to: "/revenue", label: "Revenue", icon: IndianRupee },
@@ -121,6 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ],
     "flow-ops": [
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
+      { to: "/queue", label: "Impact Queue", icon: ClipboardList },
       { to: "/inbox", label: "Inbox", icon: Inbox },
       { to: "/myt/leads", label: "Leads", icon: Target, accent: true },
       { to: "/myt/schedule", label: "Schedule", icon: CalendarPlus },
@@ -131,6 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ],
     tcm: [
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
+      { to: "/queue", label: "Impact Queue", icon: ClipboardList },
       { to: "/myt/tcm", label: "TCM Desk", icon: Target, accent: true },
       { to: "/tours", label: "My Tours", icon: CalendarPlus, badge: incompletePostTour },
       { to: "/follow-ups", label: "Follow-ups", icon: ClipboardList, badge: overdueCount },
