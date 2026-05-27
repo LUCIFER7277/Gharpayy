@@ -194,11 +194,11 @@ export function DailyActionQueue() {
     const lDivya = findLeadByName("divya n");
 
     const overdueRaw = [
-      { lead: lManish, reason: "Resurrect ghost · Manish · due 25 May, 5:18 pm" },
-      { lead: lVikram, reason: "Re-engagement attempt · Vikram · due 26 May, 5:18 pm" },
+      { lead: lManish, reason: "Resurrect ghost — Manish · due 25 May, 5:18 pm" },
+      { lead: lVikram, reason: "Re-engagement attempt — Vikram · due 26 May, 5:18 pm" },
       { lead: lFaisal, reason: "Move-in too far — sanity check · due 26 May, 5:18 pm" },
-      { lead: lRiya, reason: "Post-tour update missing · Riya · due 27 May, 2:18 pm" },
-      { lead: lTanya, reason: "Post-tour empty · Tanya · due 27 May, 4:18 pm" },
+      { lead: lRiya, reason: "Post-tour update missing — Riya · due 27 May, 2:18 pm" },
+      { lead: lTanya, reason: "Post-tour empty — Tanya · due 27 May, 4:18 pm" },
     ].filter(item => item.lead !== undefined);
 
     const dueNowRaw = [
@@ -216,8 +216,8 @@ export function DailyActionQueue() {
     const tomorrowRaw = [
       { lead: lNitya, reason: "Roommate confirmation · due 28 May, 1:18 am" },
       { lead: lAanya, reason: "Upgrade-room confirm — Aanya · due 28 May, 2:18 am" },
-      { lead: lRahul, reason: "Follow-up call — Rahul · due 28 May, 3:18 am" },
-      { lead: lDivya, reason: "Post-tour quote pending — Divya · due 28 May, 4:18 am" },
+      { lead: lRahul, reason: "Schedule 2nd tour — Rahul · due 28 May, 11:18 am" },
+      { lead: lDivya, reason: "Decision day approaching · due 28 May, 5:18 pm" },
     ].filter(item => item.lead !== undefined);
 
     const filterListByQueryAndTcm = (list: typeof overdueRaw) => {
@@ -977,162 +977,55 @@ export function DailyActionQueue() {
       {/* ================== TAB CONTENT 2: FOLLOW-UPS VIEW ================== */}
       {activeTab === "followups" && (
         <div className="space-y-6 animate-fade-in">
-          <header>
-            <div className="text-[10px] uppercase font-bold tracking-wider text-orange-600 font-mono mb-0.5">
-              Operations Desk · SLA Reminders
-            </div>
-            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Follow-ups Queue</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Keep conversation flows warm. Schedule or trigger WhatsApp templates and check off due items.
-            </p>
-          </header>
+          {/* Chronological bands exactly as shown in the screenshot */}
+          <div className="space-y-6">
+            {/* Stack Group: Overdue */}
+            <StackGroup
+              title="OVERDUE"
+              count={stackBands.overdue.length}
+              items={stackBands.overdue}
+              headerTone="bg-rose-50 text-rose-600 border-rose-200"
+              onSelectLead={selectLead}
+              onLogCall={logCall}
+              onSendMessage={sendMessage}
+              onSnooze={setSnoozeLeadId}
+            />
 
-          {/* Followup Stats Grid */}
-          <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <Card className="p-4 bg-card border border-slate-100 shadow-sm flex flex-col justify-between h-[90px]">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono">Overdue</span>
-              <span className="text-3xl font-display font-extrabold text-rose-600 leading-none">15</span>
-            </Card>
-            <Card className="p-4 bg-card border border-slate-100 shadow-sm flex flex-col justify-between h-[90px]">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono">Completed Today</span>
-              <span className="text-3xl font-display font-extrabold text-emerald-600 leading-none">4</span>
-            </Card>
-            <Card className="p-4 bg-card border border-slate-100 shadow-sm flex flex-col justify-between h-[90px]">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono">Urgent Reminders</span>
-              <span className="text-3xl font-display font-extrabold text-amber-500 leading-none">6</span>
-            </Card>
-            <Card className="p-4 bg-card border border-slate-100 shadow-sm flex flex-col justify-between h-[90px]">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground font-mono">Conversion Pulse</span>
-              <span className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5 mt-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" /> Optimal (60s cycle)
-              </span>
-            </Card>
-          </section>
+            {/* Stack Group: Due Now */}
+            <StackGroup
+              title="DUE NOW"
+              count={stackBands.dueNow.length}
+              items={stackBands.dueNow}
+              headerTone="bg-rose-50 text-rose-600 border-rose-200"
+              onSelectLead={selectLead}
+              onLogCall={logCall}
+              onSendMessage={sendMessage}
+              onSnooze={setSnoozeLeadId}
+            />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left side: List of pending follow-ups */}
-            <div className="lg:col-span-2 space-y-3">
-              <h3 className="font-display font-bold text-sm tracking-tight text-slate-800">Pending Actions</h3>
-              <div className="space-y-3">
-                {followUps.filter(f => !f.done).map((f) => {
-                  const leadObj = leads.find(l => l.id === f.leadId);
-                  const isHigh = f.priority === "high";
-                  const isMed = f.priority === "medium";
+            {/* Stack Group: Today */}
+            <StackGroup
+              title="TODAY"
+              count={stackBands.today.length}
+              items={stackBands.today}
+              headerTone="bg-amber-50 text-amber-600 border-amber-200"
+              onSelectLead={selectLead}
+              onLogCall={logCall}
+              onSendMessage={sendMessage}
+              onSnooze={setSnoozeLeadId}
+            />
 
-                  return (
-                    <Card key={f.id} className="p-4 bg-card border border-slate-100 shadow-sm rounded-xl flex items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-slate-800">{leadObj?.name || "Unknown Lead"}</span>
-                          <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase font-mono ${
-                            isHigh
-                              ? "bg-rose-50 text-rose-600 border border-rose-100"
-                              : isMed
-                                ? "bg-amber-50 text-amber-600 border border-amber-100"
-                                : "bg-blue-50 text-blue-600 border border-blue-100"
-                          }`}>
-                            {f.priority}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-700 font-medium mt-1 leading-normal">
-                          {f.reason}
-                        </p>
-                        <div className="text-[10px] text-muted-foreground mt-1 font-mono">
-                          Due: {new Date(f.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {leadObj?.phone}
-                        </div>
-                      </div>
-                      
-                      {/* Follow-up Quick Actions */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2.5 text-[10px] font-bold gap-1 rounded-lg shadow-sm"
-                          onClick={() => {
-                            sendMessage(f.leadId, "WhatsApp template sent from Follow-ups.");
-                            toast.success(`WhatsApp follow-up sent to ${leadObj?.name}`);
-                          }}
-                        >
-                          <MessageSquare className="h-3.5 w-3.5 text-emerald-500" /> WA
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2.5 text-[10px] font-bold gap-1 rounded-lg shadow-sm"
-                          onClick={() => {
-                            logCall(f.leadId);
-                            toast.success(`Dialed ${leadObj?.name}`);
-                          }}
-                        >
-                          <Phone className="h-3.5 w-3.5 text-sky-500" /> Call
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="h-8 px-3 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-sm"
-                          onClick={() => {
-                            completeFollowUp(f.id);
-                            toast.success(`Follow-up completed for ${leadObj?.name}`);
-                          }}
-                        >
-                          <Check className="h-3.5 w-3.5" /> Done
-                        </Button>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Right side: Add a custom Follow-up form */}
-            <div>
-              <Card className="p-4 bg-card border border-slate-100 shadow-sm rounded-xl space-y-4 sticky top-20">
-                <h3 className="font-display font-bold text-sm tracking-tight text-slate-800">Schedule Custom Follow-up</h3>
-                <form onSubmit={handleCreateFollowUp} className="space-y-3.5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground font-mono">Select Lead</label>
-                    <select
-                      className="w-full bg-card border border-slate-200 text-xs rounded-lg h-9 px-3 text-foreground focus:ring-accent"
-                      value={newFollowUpLeadId}
-                      onChange={(e) => setNewFollowUpLeadId(e.target.value)}
-                      required
-                    >
-                      <option value="">-- Choose active lead --</option>
-                      {leads.map(l => (
-                        <option key={l.id} value={l.id}>{l.name} ({l.preferredArea})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground font-mono">Action Note</label>
-                    <Input
-                      placeholder="e.g. Schedule secondary tour, pitch deposit"
-                      value={newFollowUpReason}
-                      onChange={(e) => setNewFollowUpReason(e.target.value)}
-                      className="text-xs border-slate-200"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground font-mono">Priority</label>
-                    <select
-                      className="w-full bg-card border border-slate-200 text-xs rounded-lg h-9 px-3 text-foreground focus:ring-accent"
-                      value={newFollowUpPriority}
-                      onChange={(e) => setNewFollowUpPriority(e.target.value as any)}
-                    >
-                      <option value="high">High (overdue warnings enabled)</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-
-                  <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold h-9 rounded-lg shadow-sm">
-                    Schedule Follow-up
-                  </Button>
-                </form>
-              </Card>
-            </div>
+            {/* Stack Group: Tomorrow */}
+            <StackGroup
+              title="TOMORROW"
+              count={stackBands.tomorrow.length}
+              items={stackBands.tomorrow}
+              headerTone="bg-blue-50 text-blue-600 border-blue-200"
+              onSelectLead={selectLead}
+              onLogCall={logCall}
+              onSendMessage={sendMessage}
+              onSnooze={setSnoozeLeadId}
+            />
           </div>
         </div>
       )}
@@ -1526,12 +1419,14 @@ function StackGroup({
 }: StackGroupProps) {
   if (items.length === 0) return null;
   return (
-    <section className="space-y-2.5">
+    <section className="space-y-3.5">
       {/* Pill section header badge */}
-      <div className={`flex items-center gap-1 px-3 py-1 rounded-full border text-[10px] font-bold w-fit shadow-sm uppercase font-mono ${headerTone}`}>
-        <Clock className="h-3 w-3 shrink-0" />
-        <span>{title}</span>
-        <span className="ml-1 text-[10px] px-1 bg-white rounded-full border shadow-sm">{count}</span>
+      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold w-fit shadow-sm uppercase font-sans ${headerTone}`}>
+        <Clock className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+        <span className="tracking-wider">{title}</span>
+        <span className="bg-white text-slate-500 border border-slate-200/60 shadow-sm text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center font-sans shrink-0 ml-1.5">
+          {count}
+        </span>
       </div>
 
       {/* Individual Cards Container */}
