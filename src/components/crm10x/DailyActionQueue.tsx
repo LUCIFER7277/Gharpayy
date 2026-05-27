@@ -34,6 +34,46 @@ interface Lead {
   updatedAt: string;
 }
 
+interface DropdownItem {
+  id: string;
+  name: string;
+  score: number;
+}
+
+interface ActionDropdownProps {
+  title: string;
+  icon: any;
+  items: DropdownItem[];
+  onItemClick: (leadId: string, name: string) => void;
+  onClose: () => void;
+}
+
+function ActionDropdown({ title, icon: IconComponent, items, onItemClick, onClose }: ActionDropdownProps) {
+  return (
+    <div className="absolute left-0 mt-1 z-50 w-60 bg-white border border-slate-200/60 rounded-xl shadow-lg p-2.5 animate-scale-in text-left">
+      <div className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mb-2 px-2 pt-1">
+        {title}
+      </div>
+      <div className="space-y-0.5 max-h-60 overflow-y-auto">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onItemClick(item.id, item.name)}
+            className="w-full flex items-center justify-between py-1.5 px-2 hover:bg-slate-50 rounded-lg transition-colors text-xs font-semibold text-slate-700"
+          >
+            <div className="flex items-center gap-2">
+              <IconComponent className="h-3.5 w-3.5 text-slate-500" strokeWidth={2} />
+              <span>{item.name}</span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-400 font-bold">{item.score}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DailyActionQueue() {
   const {
     leads, tours, followUps, properties, role, currentTcmId, tcms,
@@ -48,6 +88,7 @@ export function DailyActionQueue() {
   const [selectedTcm, setSelectedTcm] = useState<string>("all");
   const [selectedIntentFilter, setSelectedIntentFilter] = useState<string>("all");
   const [snoozeLeadId, setSnoozeLeadId] = useState<string | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // SLA breach count is calculated from leads that are hot/warm with overdue follow-ups
   const now = useMemo(() => new Date(), []);
@@ -404,81 +445,237 @@ export function DailyActionQueue() {
         <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mr-3 font-sans">
           Hard Actions
         </span>
-        <Button
-          size="sm"
-          className="bg-orange-500 hover:bg-orange-600 text-white font-bold hover:opacity-95 transition-opacity gap-1 rounded-full px-4 h-8 text-xs shadow-sm"
-          onClick={() => {
-            selectLead(null);
-            toast.info("Add Lead Drawer Triggered");
-          }}
-        >
-          <PlusCircle className="h-4 w-4" /> Add
-        </Button>
+        
+        <div className="relative">
+          <Button
+            size="sm"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold hover:opacity-95 transition-opacity gap-1 rounded-full px-4 h-8 text-xs shadow-sm"
+            onClick={() => {
+              selectLead(null);
+              toast.info("Add Lead Drawer Triggered");
+            }}
+          >
+            <PlusCircle className="h-4 w-4" /> Add
+          </Button>
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5 font-semibold"
-          onClick={() => {
-            const firstHot = leads.find(l => l.intent === "hot" && l.stage !== "booked");
-            if (firstHot) {
-              logCall(firstHot.id);
-              toast.success(`Dialing HOT lead: ${firstHot.name}`);
-            } else {
-              toast.error("No active HOT leads found");
-            }
-          }}
-        >
-          <Phone className="h-3.5 w-3.5" /> Call HOT <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 1. Call HOT */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5 font-semibold"
+            onClick={() => setActiveDropdown(activeDropdown === "call" ? null : "call")}
+          >
+            <Phone className="h-3.5 w-3.5 text-slate-500" strokeWidth={2} /> Call HOT <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "call" && (
+            <ActionDropdown
+              title="NEXT 5 CANDIDATES"
+              icon={Phone}
+              items={[
+                { id: "l-13", name: "Rahul V.", score: 48 },
+                { id: "l-7", name: "Arjun K.", score: 47 },
+                { id: "l-3", name: "Vikram S.", score: 46 },
+                { id: "l-16", name: "Manish T.", score: 26 },
+                { id: "l-18", name: "Faisal N.", score: 24 }
+              ]}
+              onItemClick={(leadId, name) => {
+                logCall(leadId);
+                setActiveDropdown(null);
+                toast.success(`Dialing HOT candidate: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 bg-amber-500/5 border border-amber-500/20 text-amber-700 hover:bg-amber-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
-        >
-          <CalendarIcon className="h-3.5 w-3.5 text-amber-500" /> Schedule · Rahul <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 2. Schedule */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 bg-amber-500/5 border border-amber-500/20 text-amber-700 hover:bg-amber-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "schedule" ? null : "schedule")}
+          >
+            <CalendarIcon className="h-3.5 w-3.5 text-amber-500" strokeWidth={2} /> Schedule · Rahul <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "schedule" && (
+            <ActionDropdown
+              title="NEXT TO SCHEDULE"
+              icon={CalendarIcon}
+              items={[
+                { id: "l-13", name: "Rahul V.", score: 48 },
+                { id: "l-2", name: "Ananya G.", score: 42 },
+                { id: "l-7", name: "Arjun K.", score: 47 },
+                { id: "l-12", name: "Tanya M.", score: 39 },
+                { id: "l-17", name: "Reema A.", score: 35 }
+              ]}
+              onItemClick={(leadId, name) => {
+                sendMessage(leadId, `Hi ${name}! Just scheduling our property tour.`);
+                setActiveDropdown(null);
+                toast.success(`WhatsApp scheduling coordinates initiated for: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 bg-orange-500/5 border border-orange-500/20 text-orange-700 hover:bg-orange-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
-        >
-          <FileText className="h-3.5 w-3.5 text-orange-500" /> Quote · Divya <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 3. Quote */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 bg-orange-500/5 border border-orange-500/20 text-orange-700 hover:bg-orange-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "quote" ? null : "quote")}
+          >
+            <FileText className="h-3.5 w-3.5 text-orange-500" strokeWidth={2} /> Quote · Divya <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "quote" && (
+            <ActionDropdown
+              title="NEXT TO QUOTE"
+              icon={FileText}
+              items={[
+                { id: "l-8", name: "Divya N.", score: 78 },
+                { id: "l-6", name: "Riya D.", score: 72 },
+                { id: "l-12", name: "Tanya M.", score: 58 },
+                { id: "l-4", name: "Sneha P.", score: 84 },
+                { id: "l-1", name: "Karthik R.", score: 86 }
+              ]}
+              onItemClick={(leadId, name) => {
+                setLeadStage(leadId, "negotiation");
+                sendMessage(leadId, "Hi! Quotation sent for your HSR Block PG stay.");
+                setActiveDropdown(null);
+                toast.success(`WhatsApp Quotation Template sent to: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 bg-rose-500/5 border border-rose-500/20 text-rose-700 hover:bg-rose-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
-        >
-          <Flame className="h-3.5 w-3.5 text-rose-500" /> Negotiate · Aakash <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 4. Negotiate */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 bg-rose-500/5 border border-rose-500/20 text-rose-700 hover:bg-rose-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "negotiate" ? null : "negotiate")}
+          >
+            <Flame className="h-3.5 w-3.5 text-rose-500" strokeWidth={2} /> Negotiate · Aakash <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "negotiate" && (
+            <ActionDropdown
+              title="NEXT TO NEGOTIATE"
+              icon={Flame}
+              items={[
+                { id: "l-11", name: "Aakash B.", score: 92 },
+                { id: "l-9", name: "Sanjay P.", score: 88 },
+                { id: "l-21", name: "Megha B.", score: 87 },
+                { id: "l-23", name: "Aanya L.", score: 86 },
+                { id: "l-15", name: "Devika R.", score: 67 }
+              ]}
+              onItemClick={(leadId, name) => {
+                selectLead(leadId);
+                setActiveDropdown(null);
+                toast.info(`Opening custom Negotiation Playbook for: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 bg-emerald-500/5 border border-emerald-500/25 text-emerald-700 hover:bg-emerald-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
-        >
-          <UserCheck className="h-3.5 w-3.5 text-emerald-600" /> Book · Aakash <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 5. Book */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 bg-emerald-500/5 border border-emerald-500/25 text-emerald-700 hover:bg-emerald-500/10 text-xs gap-1.5 font-bold rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "book" ? null : "book")}
+          >
+            <UserCheck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2} /> Book · Aakash <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "book" && (
+            <ActionDropdown
+              title="NEXT TO BOOK"
+              icon={UserCheck}
+              items={[
+                { id: "l-11", name: "Aakash B.", score: 92 },
+                { id: "l-9", name: "Sanjay P.", score: 88 },
+                { id: "l-4", name: "Sneha P.", score: 91 },
+                { id: "l-19", name: "Ritika G.", score: 89 },
+                { id: "l-5", name: "Mohit J.", score: 79 }
+              ]}
+              onItemClick={(leadId, name) => {
+                setLeadStage(leadId, "booked");
+                setActiveDropdown(null);
+                toast.success(`Deal closed successfully! ${name} is now BOOKED.`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5"
-        >
-          <CheckSquare className="h-3.5 w-3.5" /> Check-in <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 6. Check-in */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "checkin" ? null : "checkin")}
+          >
+            <CheckSquare className="h-3.5 w-3.5 text-slate-500" strokeWidth={2} /> Check-in <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "checkin" && (
+            <ActionDropdown
+              title="NEXT TO CHECK-IN"
+              icon={CheckSquare}
+              items={[
+                { id: "l-14", name: "Pranav S.", score: 64 },
+                { id: "l-20", name: "Harsh V.", score: 84 },
+                { id: "l-19", name: "Ritika G.", score: 89 },
+                { id: "l-1", name: "Karthik R.", score: 86 },
+                { id: "l-10", name: "Nitya K.", score: 71 }
+              ]}
+              onItemClick={(leadId, name) => {
+                sendMessage(leadId, `Hi ${name}! Hope your move-in check-in was smooth.`);
+                setActiveDropdown(null);
+                toast.success(`Check-in WhatsApp log sent to: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5"
-        >
-          <RefreshCw className="h-3.5 w-3.5" /> Revive <ChevronDown className="h-3 w-3 opacity-60" />
-        </Button>
+        {/* 7. Revive */}
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs gap-1.5 rounded-full px-3.5"
+            onClick={() => setActiveDropdown(activeDropdown === "revive" ? null : "revive")}
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-slate-500" strokeWidth={2} /> Revive <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+          {activeDropdown === "revive" && (
+            <ActionDropdown
+              title="NEXT TO REVIVE"
+              icon={RefreshCw}
+              items={[
+                { id: "l-16", name: "Manish T.", score: 32 },
+                { id: "l-3", name: "Vikram S.", score: 38 },
+                { id: "l-18", name: "Faisal N.", score: 28 },
+                { id: "l-13", name: "Rahul V.", score: 51 },
+                { id: "l-2", name: "Ananya G.", score: 62 }
+              ]}
+              onItemClick={(leadId, name) => {
+                sendMessage(leadId, "Hi! We have some new premium single rooms available in Koramangala. Interested?");
+                setActiveDropdown(null);
+                toast.success(`Cold Lead Revival sequence sent to: ${name}`);
+              }}
+              onClose={() => setActiveDropdown(null)}
+            />
+          )}
+        </div>
       </section>
 
       {/* Priority Legend Bar */}
