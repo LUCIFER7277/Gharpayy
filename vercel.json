@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "SERVER_PRESET": "vercel",
+      "NITRO_PRESET": "vercel"
+    }
+  }
+}
